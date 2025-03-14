@@ -102,3 +102,91 @@ ALTER TABLE DEPT_COPY DROP COLUMN DEPT_ID;
 -- 테이블이란? 행과 열로 이루어진 DB의 가장 기본적인 객체
 --> 테이블 최소 1개 이사으이 컬럼이 존재해야하기 때문에
 -- 모든 컬럼을 다 삭제할 순 없다.
+
+-- 테이블 삭제
+DROP TABLE DEPT_COPY;
+
+-- DEPT_COPY 테이블에 PK 추가
+-- (컬럼 : DEPT_ID, 제약조건명 : D_COPY_PK)
+ALTER TABLE DEPT_COPY ADD CONSTRAINT D_COPY_PK PRIMARY KEY(DEPT_ID);
+
+-- 3. 이름 변경(컬럼명, 테이블명, 제약조건명)
+
+-- 1) 컬럼명 변경 (DEPT_TITLE -> DEPT_NAME)
+ALTER TABLE DEPT_COPY RENAME COLUMN DEPT_TITLE TO DEPT_NAME;
+
+-- 2) 제약조건명 변경 (D_COPY_PK -> DEPT_COPY_PK)
+ALTER TABLE DEPT_COPY RENAME CONSTRAINT D_COPY_PK TO DEPT_COPY_PK;
+
+-- 3) 테이블명 변경(DEPT_COPY -> DCOPY)
+ALTER TABLE DEPT_COPY RENAME TO DCOPY;
+
+SELECT * FROM DCOPY;
+
+-----------------------------------------------------------------------------------------------------------
+
+-- 4. 테이블 삭제
+
+-- DROP TABLE 테이블명 [CASCADE CONSTRAINTS];
+
+-- 1) 관계가 형성되지 않은 테이블 삭제
+DROP TABLE DCOPY;
+
+-- 2) 관계가 형성된 테이블 삭제
+CREATE TABLE TB1(
+	TB1_PK NUMBER PRIMARY KEY,
+	TB1_COL NUMBER
+); -- 부모 테이블
+
+CREATE TABLE TB2(
+	TB2_PK NUMBER PRIMARY KEY,
+	TB2_COL NUMBER REFERENCES TB1 -- FK 제약조건 설정
+); -- 자식 테이블
+
+-- TB1에 샘플 데이터 삽입
+INSERT INTO TB1 VALUES (1, 100);
+INSERT INTO TB1 VALUES (2, 200);
+INSERT INTO TB1 VALUES (3, 300);
+
+SELECT * FROM TB1;
+
+-- TB2에 샘플 데이터 삽입
+INSERT INTO TB2 VALUES (11,1);
+INSERT INTO TB2 VALUES (12,2);
+INSERT INTO TB2 VALUES (13,3);
+
+SELECT * FROM TB2;
+
+COMMIT;
+
+-- TB1과 TB2는 부모-자식 테이블 관계 형성
+
+-- 부모인 TB1 테이블을 삭제하려고 할때
+DROP TABLE TB1;
+-- ORA-02449: 외래 키에 의해 참조되는 고유/기본 키가 테이블에 있습니다
+--> 해결방법
+-- 1) 자식 테이블을 먼저 삭제
+-- 2) ALTER를 이용해서 FK 제약조건 삭제 후 TB1 삭제
+-- 3) DROP TALBE 삭제옵션 CASCADE CONSTRIANTS 사용
+--> CASCADE CONSTRAINTS : 삭제하려는 테이블과 연결된 FK 제약조건을 모두 삭제
+
+DROP TABLE TB1 CASCADE CONSTRAINTS; -- 테이블 삭제 시 연결된 FK 관계도 모두 삭제
+
+/*DDL 주의 사항*/
+--1) DDL은 COMMIT/ ROLLBACK이 되지 않는다. 
+--2) DDL과 DML구문 섞어서 수행하면 안된다.
+--DDL (CREATE,ALTER,DROP : 객체 생성/ 수정/삭제)
+--DML (INSERT,UPDATE,DELETE : 데이터 (행)추가/갱신/삭제)
+--> DDL은 수행시 존재하고 있는 트랜잭션을 모두 DB에 강제 COMMIT 시킴
+--> DDL이 종료된 후에 DML구문을 수행할수 있도록 권장!
+
+--DML(INSERT수행)
+INSERT INTO TB2 VALUES(14,4); 
+INSERT INTO TB2 VALUES(15,5); 
+
+--DDL (컬럼명 변경)
+ALTER TABLE TB2 RENAME COLUMN TB2_COL TO TB2_COLUMN;
+
+ROLLBACK;
+SELECT * FROM TB2;
+--롤백 안된다... 위에서 DDL구문중 ALTER를 사용해서 그 시점에 강제 COMMIT 되었기 때문에 
