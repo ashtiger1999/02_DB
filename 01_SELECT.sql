@@ -271,3 +271,12 @@ SELECT emp_name 이름,hire_date 입사일 FROM EMPLOYEE e ORDER BY 입사일;
 -- 부서코드 오름차순 정렬 후 급여 내림차순 정렬
 SELECT emp_name, DEPT_code, salary
 FROM employee ORDER BY DEPT_CODe, salary DESC;
+
+
+					select emp_id,emp_name,decode(substr(emp_no,8,1),1,'남',2,'녀') 성별,salary,job_name,dept_title
+					from employee
+					join job using(job_code)
+					left join department on(dept_id = dept_code)
+					where substr(emp_no,8,1) = 2
+					and salary between 3000000 and 4000000
+					order by salary DESC;

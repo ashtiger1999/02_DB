@@ -747,6 +747,17 @@ WHERE EMP_NO IN (SELECT MAX(EMP_NO)
 								WHERE s.job_code = m.job_code)
 ORDER BY 나이 DESC;
 
+SELECT EMP_ID, EMP_NAME, JOB_NAME, 
+FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(SUBSTR(EMP_NO, 1, 6), 'RRMMDD')) / 12 ) "나이", 
+TO_CHAR(SALARY * (1 + NVL(BONUS, 0)) * 12, 'L999,999,999') "보너스 포함 연봉"
+FROM EMPLOYEE MAIN
+--JOIN JOB USING(JOB_CODE)
+JOIN JOB J ON (MAIN.JOB_CODE = J.JOB_CODE)
+WHERE SUBSTR(EMP_NO, 1, 6) = (SELECT MAX(SUBSTR(EMP_NO, 1, 6))
+                                             FROM EMPLOYEE SUB 
+                                             WHERE MAIN.JOB_CODE = SUB.JOB_CODE)
+ORDER BY "나이" DESC;
+
 
 
 
